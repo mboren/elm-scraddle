@@ -104,11 +104,13 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    Html.div []
+    Html.div
+        [ Html.Attributes.style [ ( "background-color", "lightgray" ), ( "width", "100%" ), ( "height", "100%" ) ] ]
         [ Html.input
             [ Html.Attributes.type_ "text"
             , Html.Attributes.value model.word
             , Html.Events.onInput NewText
+            , Html.Attributes.style [ ( "display", "block" ), ( "margin", "0 auto" ), ( "width", "80%" ), ( "border-radius", "20px" ), ( "font-size", "300%" ), ( "text-align", "center" ) ]
             ]
             []
         , Html.br [] []
@@ -118,12 +120,18 @@ view model =
 
 renderStatus : Model -> Html Msg
 renderStatus model =
-    case model.status of
-        Empty ->
-            Html.text ""
+    let
+        text =
+            case model.status of
+                Empty ->
+                    Html.text "Type a word to see if it is in the Scrabble dictionary"
 
-        Thinking _ ->
-            Html.text "Loading..."
+                Thinking _ ->
+                    Html.text "Loading..."
 
-        Done ->
-            Html.text (model.word ++ " is a valid Scrabble word!")
+                Done ->
+                    Html.text (model.word ++ " is a valid word!")
+    in
+        Html.p
+            [ Html.Attributes.style [ ( "text-align", "center" ), ( "font-family", "sans-serif" ), ( "font-size", "200%" ) ] ]
+            [ text ]
