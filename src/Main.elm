@@ -1,15 +1,15 @@
 module Main exposing (Model, Msg(..), Status(..), init, initialModel, main, renderStatus, subscriptions, thinkTime, update, view)
 
-import AnimationFrame
+import Browser
+import Browser.Events
 import Html exposing (Html, div, text)
 import Html.Attributes
 import Html.Events
-import Time exposing (Time)
+import Time exposing (Posix)
 
 
-main : Program Never Model Msg
 main =
-    Html.program
+    Browser.element
         { init = init
         , view = view
         , update = update
@@ -17,13 +17,13 @@ main =
         }
 
 
-thinkTime : Time
+thinkTime : Posix
 thinkTime =
-    0.5 * Time.second
+    Time.millisToPosix 500
 
 
 type Status
-    = Thinking Time
+    = Thinking Posix
     | Empty
     | Done
 
@@ -41,13 +41,13 @@ initialModel =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
+init : () -> ( Model, Cmd Msg )
+init _ =
     ( initialModel, Cmd.none )
 
 
 type Msg
-    = Tick Time
+    = Tick Float
     | NewText String
 
 
@@ -78,10 +78,10 @@ update msg model =
                         Thinking t ->
                             let
                                 newTime =
-                                    t - delta
+                                    Time.millisToPosix (Time.posixToMillis t - Basics.floor delta)
 
                                 newStatus =
-                                    if newTime > 0 then
+                                    if Time.posixToMillis newTime > 0 then
                                         Thinking newTime
 
                                     else
@@ -97,7 +97,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.status of
         Thinking _ ->
-            AnimationFrame.diffs Tick
+            Browser.Events.onAnimationFrameDelta Tick
 
         _ ->
             Sub.none
