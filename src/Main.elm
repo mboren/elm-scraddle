@@ -1,10 +1,10 @@
-module Main exposing (..)
+module Main exposing (Model, Msg(..), Status(..), init, initialModel, main, renderStatus, subscriptions, thinkTime, update, view)
 
+import AnimationFrame
 import Html exposing (Html, div, text)
 import Html.Attributes
 import Html.Events
 import Time exposing (Time)
-import AnimationFrame
 
 
 main : Program Never Model Msg
@@ -83,10 +83,11 @@ update msg model =
                                 newStatus =
                                     if newTime > 0 then
                                         Thinking newTime
+
                                     else
                                         Done
                             in
-                                ( { model | status = newStatus }, Cmd.none )
+                            ( { model | status = newStatus }, Cmd.none )
 
                         _ ->
                             ( model, Cmd.none )
@@ -105,12 +106,17 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     Html.div
-        [ Html.Attributes.style [ ( "background-color", "lightgray" ), ( "width", "100%" ), ( "height", "100%" ) ] ]
+        [ Html.Attributes.style "background-color" "lightgray", Html.Attributes.style "width" "100%", Html.Attributes.style "height" "100%" ]
         [ Html.input
             [ Html.Attributes.type_ "text"
             , Html.Attributes.value model.word
             , Html.Events.onInput NewText
-            , Html.Attributes.style [ ( "display", "block" ), ( "margin", "0 auto" ), ( "width", "80%" ), ( "border-radius", "20px" ), ( "font-size", "300%" ), ( "text-align", "center" ) ]
+            , Html.Attributes.style "display" "block"
+            , Html.Attributes.style "margin" "0 auto"
+            , Html.Attributes.style "width" "80%"
+            , Html.Attributes.style "border-radius" "20px"
+            , Html.Attributes.style "font-size" "300%"
+            , Html.Attributes.style "text-align" "center"
             ]
             []
         , Html.br [] []
@@ -132,6 +138,6 @@ renderStatus model =
                 Done ->
                     Html.text (model.word ++ " is a valid word!")
     in
-        Html.p
-            [ Html.Attributes.style [ ( "text-align", "center" ), ( "font-family", "sans-serif" ), ( "font-size", "200%" ) ] ]
-            [ text ]
+    Html.p
+        [ Html.Attributes.style "text-align" "center", Html.Attributes.style "font-family" "sans-serif", Html.Attributes.style "font-size" "200%" ]
+        [ text ]
