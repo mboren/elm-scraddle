@@ -1,10 +1,12 @@
 module Main exposing (Model, Msg(..), Status(..), init, initialModel, main, renderStatus, subscriptions, thinkTime, update, view)
 
 import Browser
+import Browser.Dom
 import Browser.Events
 import Html exposing (Html, div, text)
 import Html.Attributes
 import Html.Events
+import Task exposing (Task)
 import Time exposing (Posix)
 
 
@@ -22,6 +24,10 @@ thinkTime =
     Time.millisToPosix 500
 
 
+hiddenMeasurementTextId =
+    "hidden-measurement-text"
+
+
 type Status
     = Thinking Posix
     | Empty
@@ -31,6 +37,7 @@ type Status
 type alias Model =
     { word : String
     , status : Status
+    , wordSize : Maybe Float
     }
 
 
@@ -38,6 +45,7 @@ initialModel : Model
 initialModel =
     { word = ""
     , status = Empty
+    , wordSize = Nothing
     }
 
 
@@ -49,6 +57,22 @@ init _ =
 type Msg
     = Tick Float
     | NewText String
+    | UpdateWordSize Float
+    | MissingTextElement
+
+
+updateWordMeasurement =
+    Task.attempt getSizeFromElement (Browser.Dom.getElement hiddenMeasurementTextId)
+
+
+getSizeFromElement : Result Browser.Dom.Error Browser.Dom.Element -> Msg
+getSizeFromElement res =
+    case res of
+        Ok el ->
+            UpdateWordSize el.element.width
+
+        Err _ ->
+            MissingTextElement
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -65,7 +89,7 @@ update msg model =
                         _ ->
                             Thinking thinkTime
               }
-            , Cmd.none
+            , updateWordMeasurement
             )
 
         Tick delta ->
@@ -92,6 +116,12 @@ update msg model =
                         _ ->
                             ( model, Cmd.none )
 
+        UpdateWordSize size ->
+            ( { model | wordSize = Just size }, Cmd.none )
+
+        MissingTextElement ->
+            ( model, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -103,24 +133,50 @@ subscriptions model =
             Sub.none
 
 
+font =
+    Html.Attributes.style "font" "20px sans-serif"
+
+
 view : Model -> Html Msg
 view model =
+    let
+        inputLength =
+            Maybe.withDefault 0 model.wordSize
+                |> max 20
+    in
     Html.div
-        [ Html.Attributes.style "background-color" "lightgray", Html.Attributes.style "width" "100%", Html.Attributes.style "height" "100%" ]
-        [ Html.input
-            [ Html.Attributes.type_ "text"
-            , Html.Attributes.value model.word
-            , Html.Events.onInput NewText
-            , Html.Attributes.style "display" "block"
-            , Html.Attributes.style "margin" "0 auto"
-            , Html.Attributes.style "width" "80%"
-            , Html.Attributes.style "border-radius" "20px"
-            , Html.Attributes.style "font-size" "300%"
-            , Html.Attributes.style "text-align" "center"
+        []
+        [ Html.div
+            [ Html.Attributes.style "background-color" "lightgray"
+            , Html.Attributes.style "width" "100%"
+            , Html.Attributes.style "height" "100%"
+            , font
             ]
-            []
-        , Html.br [] []
-        , renderStatus model
+            [ Html.text "Is "
+            , Html.input
+                [ font
+                , Html.Attributes.type_ "text"
+                , Html.Attributes.value model.word
+                , Html.Events.onInput NewText
+                , Html.Attributes.style "margin" "0 auto"
+                , Html.Attributes.style "text-align" "left"
+                , Html.Attributes.style "width" (String.fromFloat inputLength ++ "px")
+                ]
+                []
+            , Html.text " a valid Scrabble word?"
+            , Html.br [] []
+            , renderStatus model
+            ]
+        , Html.div
+            [ Html.Attributes.id hiddenMeasurementTextId
+            , Html.Attributes.style "position" "absolute"
+            , Html.Attributes.style "visibility" "hidden"
+            , Html.Attributes.style "height" "auto"
+            , Html.Attributes.style "width" "auto"
+            , Html.Attributes.style "white-space" "nowrap"
+            , font
+            ]
+            [ Html.text model.word ]
         ]
 
 
@@ -139,5 +195,5 @@ renderStatus model =
                     Html.text (model.word ++ " is a valid word!")
     in
     Html.p
-        [ Html.Attributes.style "text-align" "center", Html.Attributes.style "font-family" "sans-serif", Html.Attributes.style "font-size" "200%" ]
+        []
         [ text ]
