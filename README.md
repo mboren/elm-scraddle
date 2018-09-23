@@ -5,7 +5,7 @@ this app simply adds the word to the English language.
 
 ## Getting started
 
-You need to have [Elm](http://elm-lang.org/) 0.18 installed on your machine.
+You need to have [Elm](http://elm-lang.org/) 0.19 installed on your machine.
 
 Compile this project with:
 
